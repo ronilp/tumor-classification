@@ -1,5 +1,9 @@
+import multiprocessing
 import os
-import classification_config
+
+import torch
+
+import training_config
 
 
 def get_patient_id(npz_path):
@@ -20,7 +24,17 @@ def join_paths(npz_path, class_name, patient_id):
 
 def find_classes(dir):
     classes = [d for d in os.listdir(dir) if
-               os.path.isdir(os.path.join(dir, d)) and d in classification_config.ALLOWED_CLASSES]
+               os.path.isdir(os.path.join(dir, d)) and d in training_config.ALLOWED_CLASSES]
     classes.sort()
     class_to_idx = {classes[i]: i for i in range(len(classes))}
     return classes, class_to_idx
+
+
+def load_datasets(Dataset_Class):
+    datasets = {x: Dataset_Class(os.path.join(training_config.DATA_DIR, x)) for x in ['train', 'val']}
+    dataset_loaders = {
+    x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=True,
+                                   num_workers=multiprocessing.cpu_count()) for x in
+    ['train', 'val']}
+    dataset_sizes = {x: len(datasets[x]) for x in ['train', 'val']}
+    return dataset_loaders, dataset_sizes

@@ -3,12 +3,29 @@ import os
 import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
-
-import classification_config
+import pandas as pd
+import training_config
 import dataset_utils
 
+age_dict = {}
 
-class MRI_2D_Dataset(Dataset):
+
+def load_age_dict():
+    age_csv_path = training_config.AGE_CSV_PATH
+    df = pd.read_csv(age_csv_path)
+    age_dict = dict(zip(df['Patient_ID'], df['Total Age in Mo']))
+    return age_dict
+
+
+def get_age(patient_id):
+    global age_dict
+    if len(age_dict.keys()) == 0:
+        age_dict = load_age_dict()
+
+    return age_dict[patient_id]
+
+
+class MRI_2D_Regression_Dataset(Dataset):
     def __init__(self, npz_path, transforms=None):
         # Read the file path
         self.data_path = npz_path
@@ -17,12 +34,12 @@ class MRI_2D_Dataset(Dataset):
         self.transforms = transforms
 
         # Read class names
-        self.classes, self.class_to_idx = dataset_utils.find_classes(self.data_path)
+        self.classes, _ = dataset_utils.find_classes(self.data_path)
 
         # Read image_arr and label_arr from npz
         self.image_arr = []
         self.label_arr = []
-        for class_name in classification_config.ALLOWED_CLASSES:
+        for class_name in training_config.ALLOWED_CLASSES:
             class_path = os.path.join(self.data_path, class_name)
             if not os.path.exists(class_path):
                 continue
@@ -33,12 +50,12 @@ class MRI_2D_Dataset(Dataset):
 
                 path = dataset_utils.join_paths(self.data_path, class_name, patient_id_npz)
                 npz = np.load(path)
-                filter = classification_config.MODEL_FILTER
+                filter = training_config.MODEL_FILTER
                 if filter in npz.keys():
                     patient_id = dataset_utils.get_patient_id(patient_id_npz)
                     for i in range(npz.get(filter).shape[2]):
                         self.image_arr.append(class_name + ":" + patient_id + ":" + str(i))
-                        self.label_arr.append(self.class_to_idx[class_name])
+                        self.label_arr.append(get_age(patient_id))
                 npz.close()
 
         # Calculate len
@@ -51,11 +68,11 @@ class MRI_2D_Dataset(Dataset):
         (class_name, patient_id, plane) = dataset_utils.get_plane_at_index(single_image_name)
         path = dataset_utils.join_paths(self.data_path, class_name, patient_id)
         npz = np.load(path + ".npz")
-        raw_img = npz.get(classification_config.MODEL_FILTER)[:, :, plane]
+        raw_img = npz.get(training_config.MODEL_FILTER)[:, :, plane]
         raw_img = np.resize(raw_img, (224, 224))
 
         # Expand dimension for a single channel-image
-        if classification_config.SINGLE_CHANNEL:
+        if training_config.SINGLE_CHANNEL:
             raw_img = np.expand_dims(raw_img, axis=0)
         else:
             # Convert raw image to a 3 channel-image
@@ -69,7 +86,7 @@ class MRI_2D_Dataset(Dataset):
         img_as_tensor = torch.Tensor(raw_img)
 
         # Get label of the image
-        single_image_label = torch.tensor(self.label_arr[index])
+        single_image_label = torch.tensor(np.expand_dims(self.label_arr[index], axis=-1)).float()
 
         return (img_as_tensor, single_image_label)
 
@@ -78,7 +95,7 @@ class MRI_2D_Dataset(Dataset):
 
 
 if __name__ == '__main__':
-    custom_dataset = MRI_2D_Dataset(os.path.join(classification_config.DATA_DIR, 'train'))
+    custom_dataset = MRI_2D_Regression_Dataset(os.path.join(training_config.DATA_DIR, 'train'))
     print(custom_dataset.classes)
     print(custom_dataset.data_len)
 
@@ -86,7 +103,7 @@ if __name__ == '__main__':
     print("Single image shape :", img.shape)
     print("Single image label :", label)
 
-    mn_dataset_loader = torch.utils.data.DataLoader(dataset=custom_dataset, batch_size=classification_config.BATCH_SIZE,
+    mn_dataset_loader = torch.utils.data.DataLoader(dataset=custom_dataset, batch_size=training_config.BATCH_SIZE,
                                                     shuffle=False)
 
     for images, labels in mn_dataset_loader:
@@ -95,5 +112,6 @@ if __name__ == '__main__':
         print(labels)
 
         for i in range(len(images)):
-            print(images[i].numpy().shape)
-            print(labels[i])
+            # print(images[i].numpy().shape)
+            # print(labels[i])
+            print(labels[i].shape)
