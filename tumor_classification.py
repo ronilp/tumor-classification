@@ -1,3 +1,4 @@
+import os
 import copy
 import time
 
@@ -84,7 +85,7 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
                     best_model = copy.deepcopy(model)
                     print('Best accuracy: {:4f}'.format(best_acc))
                     model_name = MODEL_PREFIX + "_" + str(epoch) + "_" + str(time.time()) + ".pt"
-                    torch.save(model_ft.state_dict(), model_name)
+                    torch.save(model_ft.state_dict(), os.path.join("checkpoints", model_name))
                     print("Saved model :", model_name)
 
     time_elapsed = time.time() - since
@@ -113,5 +114,5 @@ print("Training done")
 
 # Save model
 model_name = MODEL_PREFIX + "_final_" + str(time.time()) + ".pt"
-torch.save(model_ft.state_dict(), model_name)
+torch.save(model_ft.state_dict(), os.path.join("checkpoints", model_name))
 print("Saved model :", model_name)
