@@ -38,3 +38,11 @@ def load_datasets(Dataset_Class):
     ['train', 'val']}
     dataset_sizes = {x: len(datasets[x]) for x in ['train', 'val']}
     return dataset_loaders, dataset_sizes
+
+def load_testset(Dataset_Class):
+    datasets = {x: Dataset_Class(os.path.join(training_config.DATA_DIR, x)) for x in ['test']}
+    dataset_loaders = {
+    x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=True,
+                                   num_workers=multiprocessing.cpu_count()) for x in ['test']}
+    dataset_sizes = {x: len(datasets[x]) for x in ['test']}
+    return dataset_loaders, dataset_sizes
