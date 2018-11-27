@@ -9,7 +9,7 @@ import dataset_utils
 
 
 class MRI_2D_Classification_Dataset(Dataset):
-    def __init__(self, npz_path, transforms=None):
+    def __init__(self, npz_path, mode, transforms=None):
         # Read the file path
         self.data_path = npz_path
 
@@ -22,36 +22,50 @@ class MRI_2D_Classification_Dataset(Dataset):
         # Read image_arr and label_arr from npz
         self.image_arr = []
         self.label_arr = []
+        class_counts = {}
         for class_name in training_config.ALLOWED_CLASSES:
             class_path = os.path.join(self.data_path, class_name)
             if not os.path.exists(class_path):
                 continue
 
+            subject_count = 0
+            plane_count = 0
             for patient_id_npz in os.listdir(class_path):
+                subject_count += 1
+                if subject_count > training_config.CLASS_LIMIT:
+                    break
                 if not patient_id_npz.endswith(".npz"):
                     continue
 
                 path = dataset_utils.join_paths(self.data_path, class_name, patient_id_npz)
                 npz = np.load(path)
-                filter = training_config.MODEL_FILTER
-                if filter in npz.keys():
+                filters = list(npz.keys())
+                for filter in filters:
                     patient_id = dataset_utils.get_patient_id(patient_id_npz)
                     for i in range(npz.get(filter).shape[2]):
-                        self.image_arr.append(class_name + ":" + patient_id + ":" + str(i))
+                        plane_count += 1
+                        self.image_arr.append(class_name + ":" + patient_id + ":" + filter + ":" + str(i))
                         self.label_arr.append(self.class_to_idx[class_name])
+
                 npz.close()
+
+            class_counts[class_name + "_subjects"] = subject_count
+            class_counts[class_name + "_planes"] = plane_count
 
         # Calculate len
         self.data_len = len(self.image_arr)
+
+        print(mode + " subject counts : " + str(class_counts))
 
     def __getitem__(self, index):
         single_image_name = self.image_arr[index]
 
         # Open image
-        (class_name, patient_id, plane) = dataset_utils.get_plane_at_index(single_image_name)
+        (class_name, patient_id, filter, plane) = dataset_utils.get_plane_at_index(single_image_name)
         path = dataset_utils.join_paths(self.data_path, class_name, patient_id)
+
         npz = np.load(path + ".npz")
-        raw_img = npz.get(training_config.MODEL_FILTER)[:, :, plane]
+        raw_img = npz.get(filter)[:, :, plane]
         raw_img = np.resize(raw_img, (224, 224))
 
         # Expand dimension for a single channel-image

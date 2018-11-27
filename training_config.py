@@ -4,19 +4,20 @@ import torch
 BASE_LR = 1e-4
 LR_DECAY_EPOCHS = 10
 LR_DECAY = 0.1
+LEARNING_PATIENCE = 10
 
 ### Dataset Config
-NUM_CLASSES = 1
-# DATA_DIR = '/Users/rpancholia/Documents/Acads/Projects/data/pbt-classification/'
-DATA_DIR = '/Users/rpancholia/Documents/Acads/Projects/data/data_T2_only_2'
+NUM_CLASSES = 2
+DATA_DIR = '/Users/rpancholia/Documents/Acads/Projects/data/pbt-classification/'
 AGE_CSV_PATH = '/Users/rpancholia/Documents/Acads/Projects/data/flipped_clinical_NormalPedBrainAge_StanfordCohort.csv'
-ALLOWED_CLASSES = ["Normals"]
+ALLOWED_CLASSES = ["MB", "DIPG"]
 MODEL_FILTER = "T2 ax"
 SINGLE_CHANNEL = False
+CLASS_LIMIT = 70
 
 ### Miscellaneous Config
-MODEL_PREFIX = "age_regression"
-BATCH_SIZE = 15
+MODEL_PREFIX = "dipg_vs_mb"
+BATCH_SIZE = 1
 
 ### GPU SETTINGS
 CUDA_DEVICE = 0  # GPU device ID

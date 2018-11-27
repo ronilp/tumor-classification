@@ -26,7 +26,7 @@ def get_age(patient_id):
 
 
 class MRI_2D_Regression_Dataset(Dataset):
-    def __init__(self, npz_path, transforms=None):
+    def __init__(self, npz_path, mode, transforms=None):
         # Read the file path
         self.data_path = npz_path
 
