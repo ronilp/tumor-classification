@@ -11,7 +11,8 @@ from torchvision import models
 from tqdm import tqdm
 
 from mri_2d_classification_dataset import MRI_2D_Classification_Dataset
-from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, BATCH_SIZE, LEARNING_PATIENCE
+from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, BATCH_SIZE, LEARNING_PATIENCE, \
+    EARLY_STOPPING_ENABLED
 from dataset_utils import load_datasets
 from training_utils import exp_lr_scheduler
 
@@ -115,7 +116,7 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
                     print("Loss did not improve, patience: " + str(patience))
 
             # Early stopping
-            if patience > LEARNING_PATIENCE:
+            if patience > LEARNING_PATIENCE and EARLY_STOPPING_ENABLED:
                 early_stop = True
                 break
 

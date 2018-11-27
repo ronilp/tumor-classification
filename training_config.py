@@ -18,6 +18,7 @@ CLASS_LIMIT = 70
 ### Miscellaneous Config
 MODEL_PREFIX = "dipg_vs_mb"
 BATCH_SIZE = 1
+EARLY_STOPPING_ENABLED = False
 
 ### GPU SETTINGS
 CUDA_DEVICE = 0  # GPU device ID
