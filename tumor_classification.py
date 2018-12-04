@@ -10,7 +10,8 @@ from torch.autograd import Variable
 from torchvision import models
 from tqdm import tqdm
 
-from mri_2d_classification_dataset import MRI_2D_Classification_Dataset
+from models.MRNet import MRNet
+from mri_3d_classification_dataset import MRI_3D_Classification_Dataset
 from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, BATCH_SIZE, LEARNING_PATIENCE, \
     EARLY_STOPPING_ENABLED
 from dataset_utils import load_datasets
@@ -19,7 +20,7 @@ from training_utils import exp_lr_scheduler
 if GPU_MODE:
     torch.cuda.set_device(CUDA_DEVICE)
 
-dataset_loaders, dataset_sizes = load_datasets(MRI_2D_Classification_Dataset)
+dataset_loaders, dataset_sizes = load_datasets(MRI_3D_Classification_Dataset)
 
 def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
     since = time.time()
@@ -138,10 +139,7 @@ def set_parameter_requires_grad(model, feature_extracting):
         for param in model.parameters():
             param.requires_grad = False
 
-model_ft = models.resnet152(pretrained=True)
-set_parameter_requires_grad(model_ft, True)
-num_ftrs = model_ft.fc.in_features
-model_ft.fc = nn.Linear(num_ftrs, NUM_CLASSES)
+model_ft = MRNet(NUM_CLASSES)
 print(model_ft)
 
 criterion = nn.CrossEntropyLoss()
