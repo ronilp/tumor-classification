@@ -138,7 +138,7 @@ def set_parameter_requires_grad(model, feature_extracting):
         for param in model.parameters():
             param.requires_grad = False
 
-model_ft = models.resnet50(pretrained=True)
+model_ft = models.resnet152(pretrained=True)
 set_parameter_requires_grad(model_ft, True)
 num_ftrs = model_ft.fc.in_features
 model_ft.fc = nn.Linear(num_ftrs, NUM_CLASSES)
