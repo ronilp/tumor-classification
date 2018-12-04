@@ -92,7 +92,7 @@ class MRI_2D_Classification_Dataset(Dataset):
 
 
 if __name__ == '__main__':
-    custom_dataset = MRI_2D_Classification_Dataset(os.path.join(training_config.DATA_DIR, 'train'))
+    custom_dataset = MRI_2D_Classification_Dataset(os.path.join(training_config.DATA_DIR, 'train'), 'train')
     print(custom_dataset.classes)
     print(custom_dataset.data_len)
 
