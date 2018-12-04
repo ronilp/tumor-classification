@@ -4,7 +4,7 @@ from torchvision import models
 from tqdm import tqdm
 
 from dataset_utils import load_testset
-from mri_2d_regression_dataset import MRI_2D_Regression_Dataset
+from MRI_Dataset.mri_2d_regression_dataset import MRI_2D_Regression_Dataset
 from training_config import GPU_MODE
 from training_utils import regression_metrics
 

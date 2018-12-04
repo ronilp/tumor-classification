@@ -4,9 +4,9 @@ from torchvision import models
 from tqdm import tqdm
 
 from dataset_utils import load_testset
-from mri_2d_classification_dataset import MRI_2D_Classification_Dataset
+from MRI_Dataset.mri_2d_classification_dataset import MRI_2D_Classification_Dataset
 from training_config import GPU_MODE
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, classification_report, confusion_matrix
+from sklearn.metrics import f1_score, precision_score, recall_score, classification_report
 
 model = models.resnet152()
 num_ftrs = model.fc.in_features

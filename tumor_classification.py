@@ -7,12 +7,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
-from torchvision import models
 from tqdm import tqdm
 
 from models.MRNet import MRNet
-from mri_3d_classification_dataset import MRI_3D_Classification_Dataset
-from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, BATCH_SIZE, LEARNING_PATIENCE, \
+from MRI_Dataset.mri_3d_classification_dataset import MRI_3D_Classification_Dataset
+from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, LEARNING_PATIENCE, \
     EARLY_STOPPING_ENABLED
 from dataset_utils import load_datasets
 from training_utils import exp_lr_scheduler

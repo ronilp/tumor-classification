@@ -13,7 +13,7 @@ AGE_CSV_PATH = '/Users/rpancholia/Documents/Acads/Projects/data/flipped_clinical
 ALLOWED_CLASSES = ["MB", "DIPG"]
 MODEL_FILTER = "T2 ax"
 SINGLE_CHANNEL = False
-CLASS_LIMIT = 70
+CLASS_LIMIT = 1000
 
 ### Miscellaneous Config
 MODEL_PREFIX = "dipg_vs_mb"
