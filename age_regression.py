@@ -8,10 +8,10 @@ from torch.autograd import Variable
 from torchvision import models
 from tqdm import tqdm
 
-from dataset_utils import load_datasets
-from MRI_Dataset.mri_2d_regression_dataset import MRI_2D_Regression_Dataset
+from utils.dataset_utils import load_datasets
+from mri_dataset.mri_2d_regression_dataset import MRI_2D_Regression_Dataset
 from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR
-from training_utils import exp_lr_scheduler, regression_metrics
+from utils.training_utils import exp_lr_scheduler, regression_metrics
 
 if GPU_MODE:
     torch.cuda.set_device(CUDA_DEVICE)

@@ -5,7 +5,8 @@ import torch
 from torch.utils.data.dataset import Dataset
 
 import training_config
-import dataset_utils
+from utils import dataset_utils
+
 
 class MRI_3D_Classification_Dataset(Dataset):
     def __init__(self, npz_path, mode, transforms=None):

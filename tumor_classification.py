@@ -10,11 +10,11 @@ from torch.autograd import Variable
 from tqdm import tqdm
 
 from models.MRNet import MRNet
-from MRI_Dataset.mri_3d_classification_dataset import MRI_3D_Classification_Dataset
+from mri_dataset.mri_3d_classification_dataset import MRI_3D_Classification_Dataset
 from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, LEARNING_PATIENCE, \
     EARLY_STOPPING_ENABLED
-from dataset_utils import load_datasets
-from training_utils import exp_lr_scheduler
+from utils.dataset_utils import load_datasets
+from utils.training_utils import exp_lr_scheduler
 
 if GPU_MODE:
     torch.cuda.set_device(CUDA_DEVICE)
