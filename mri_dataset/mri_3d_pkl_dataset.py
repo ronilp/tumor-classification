@@ -51,6 +51,8 @@ class MRI_3D_PKL_Dataset(Dataset):
         pkl_path = self.image_arr[index]
 
         raw_img = pickle.load(open(pkl_path, "rb"))
+
+        # mid crop
         pad = int((raw_img.shape[1] - 224) / 2)
         raw_img = raw_img[:, pad:-pad, pad:-pad]
 

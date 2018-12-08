@@ -32,20 +32,29 @@ def find_classes(dir):
     return classes, class_to_idx
 
 
+def load_datasets_from_csv(Dataset_Class):
+    datasets = {x: Dataset_Class(training_config.DATA_DIR, x) for x in ['train', 'val']}
+    dataset_loaders = {
+        x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=True,
+                                       num_workers=multiprocessing.cpu_count()) for x in ['train', 'val']}
+    dataset_sizes = {x: len(datasets[x]) for x in ['train', 'val']}
+    return dataset_loaders, dataset_sizes
+
+
 def load_datasets(Dataset_Class):
     datasets = {x: Dataset_Class(os.path.join(training_config.DATA_DIR, x), x) for x in ['train', 'val']}
     dataset_loaders = {
-    x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=True,
-                                   num_workers=multiprocessing.cpu_count()) for x in
-    ['train', 'val']}
+        x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=True,
+                                       num_workers=multiprocessing.cpu_count()) for x in ['train', 'val']}
     dataset_sizes = {x: len(datasets[x]) for x in ['train', 'val']}
     return dataset_loaders, dataset_sizes
+
 
 def load_testset(Dataset_Class):
     datasets = {x: Dataset_Class(os.path.join(training_config.DATA_DIR, x), x) for x in ['test']}
     dataset_loaders = {
-    x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=True,
-                                   num_workers=multiprocessing.cpu_count()) for x in ['test']}
+        x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=True,
+                                       num_workers=multiprocessing.cpu_count()) for x in ['test']}
     dataset_sizes = {x: len(datasets[x]) for x in ['test']}
     return dataset_loaders, dataset_sizes
 
@@ -56,6 +65,7 @@ def interleave_images(pixel_array):
     eo = pixel_array[::2, 1::2]
     oe = pixel_array[1::2, ::2]
     return ee, oo, eo, oe
+
 
 def get_manufacturer(dcm):
     if "GE MEDICAL SYSTEMS" == dcm.Manufacturer:
