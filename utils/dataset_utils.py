@@ -4,6 +4,7 @@ import os
 import torch
 
 import training_config
+from utils.constants import GE, SIEMENS, SCANNER_15T, SCANNER_3T, PHILIPS
 
 
 def get_patient_id(npz_path):
@@ -55,3 +56,20 @@ def interleave_images(pixel_array):
     eo = pixel_array[::2, 1::2]
     oe = pixel_array[1::2, ::2]
     return ee, oo, eo, oe
+
+def get_manufacturer(dcm):
+    if "GE MEDICAL SYSTEMS" == dcm.Manufacturer:
+        manufacturer = GE
+    elif dcm.Manufacturer.startswith("Philips"):
+        manufacturer = PHILIPS
+    else:
+        manufacturer = SIEMENS
+    return manufacturer
+
+
+def get_scanner(dcm):
+    if dcm.MagneticFieldStrength == 3:
+        scanner = SCANNER_3T
+    else:
+        scanner = SCANNER_15T
+    return scanner

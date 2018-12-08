@@ -1,0 +1,7 @@
+GE = "GE"
+PHILIPS = "Philips"
+SIEMENS = "Siemens"
+MEAN = "mean"
+STD_DEV = "stddev"
+SCANNER_3T = "3t"
+SCANNER_15T = "15t"
