@@ -5,7 +5,7 @@ from torchvision import models
 
 class MRNet(nn.Module):
     def __init__(self, NUM_CLASSES):
-        super().__init__()
+        super(MRNet, self).__init__()
         self.model = models.alexnet(pretrained=True)
         self.gap = nn.AdaptiveAvgPool2d(1)
         self.classifier = nn.Linear(256, NUM_CLASSES)
