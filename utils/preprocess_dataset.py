@@ -5,12 +5,19 @@ from multiprocessing import Pool
 import logging
 import numpy as np
 import pydicom as dicom
+
+from utils.dataset_utils import interleave_images
+
 logging.basicConfig(level=logging.DEBUG)
 
 FILEPATH_DICT_PATH = "/Users/rpancholia/Documents/Acads/Projects/data/classification-pkl"
 ROOT_SRC_PATH = "/Users/rpancholia/Documents/Acads/Projects/data/classification-dcm/"
-PREPROCESS_DEST_PATH = "/Users/rpancholia/Documents/Acads/Projects/data/classification-pkl/"
+PREPROCESS_DEST_PATH = "/Users/rpancholia/Documents/Acads/Projects/data/classification-pkl-augmented/"
 CLASSES = ["DIPG", "MB", "EP"]
+CROP_SIZE = 224
+
+# Flag to augment images by sampling pixels
+SAMPLE_IMAGES = True
 
 
 def create_missing_dirs(path):
@@ -45,7 +52,7 @@ def populate_filepath_dict(class_name):
         if not file_name.endswith(".dcm"):
             continue
         splitted_terms = file_name.split("-")
-        patient_id = splitted_terms[1]
+        patient_id = splitted_terms[1].replace("_", "") # remove _ from patient_ids
         study_id = "-".join(splitted_terms[2:-1])
         key = patient_id + "_" + study_id
         if key not in patient_study_vs_files.keys():
@@ -60,6 +67,35 @@ def populate_filepath_dict(class_name):
 
 # patient_study_vs_files = populate_filepath_dict(class_name)
 
+
+def fix_dims(img_npy):
+    """ Make sure that the third index ranges up to len(stacked_image_planes) """
+    img_npy = np.swapaxes(img_npy, 0, 2)
+    img_npy = np.swapaxes(img_npy, 0, 1)
+    return img_npy
+
+
+def rearrange_axes(img_npy):
+    """ Make first index len(stacked_image_planes) """
+    img_npy = np.swapaxes(img_npy, 0, 2)
+    img_npy = np.swapaxes(img_npy, 1, 2)
+    return img_npy
+
+
+def handle_dims(img_npy, stacked_image_planes):
+    if img_npy.shape[0] == len(stacked_image_planes):
+        fix_dims(img_npy)
+
+    return rearrange_axes(img_npy)
+
+
+def save_npy(img_npy, patient_study_id, sample=""):
+    dest_file = os.path.join(os.path.join(PREPROCESS_DEST_PATH, class_name), patient_study_id + sample)
+    with open(dest_file + ".pkl", "wb") as pickle_file:
+        pickle.dump(img_npy, pickle_file)
+        # print ("Saved pickle for {}".format(dest_file))
+
+
 def stack_images(patient_study_id):
     """ Create pixel array pickles from raw DICOM images """
     global class_name, patient_study_vs_files
@@ -67,27 +103,37 @@ def stack_images(patient_study_id):
     try:
         files = patient_study_vs_files[patient_study_id]
         stacked_image_planes = []
+        ee_stacked_image_planes = []
+        oo_stacked_image_planes = []
+        eo_stacked_image_planes = []
+        oe_stacked_image_planes = []
+        b_augmenting = False
         for file_path in files:
             with dicom.read_file(file_path) as dcm:
                 plane = np.array(dcm.pixel_array)
-                plane = np.squeeze(plane)
-                stacked_image_planes.append(plane)
+                if not SAMPLE_IMAGES or plane.shape[0] < 2 * CROP_SIZE or plane.shape[1] < 2 * CROP_SIZE:
+                    stacked_image_planes.append(np.squeeze(plane))
+                else:
+                    b_augmenting = True
+                    ee, oo, eo, oe = interleave_images(plane)
+                    logging.info(patient_study_id + " " + class_name + " augmented planes")
+                    ee_stacked_image_planes.append(np.squeeze(ee))
+                    oo_stacked_image_planes.append(np.squeeze(oo))
+                    eo_stacked_image_planes.append(np.squeeze(eo))
+                    oe_stacked_image_planes.append(np.squeeze(oe))
 
-        img_npy = np.float16(np.array(stacked_image_planes))
+        if not b_augmenting:
+            img_npy = np.float16(np.array(stacked_image_planes))
+            img_npy = handle_dims(img_npy, stacked_image_planes)
+            save_npy(img_npy, patient_study_id)
+        else:
+            plane_list = [ee_stacked_image_planes, oo_stacked_image_planes, oe_stacked_image_planes,
+                          eo_stacked_image_planes]
+            img_npy_list = [np.float16(np.array(stacked_image_planes)) for stacked_image_planes in plane_list]
 
-        if img_npy.shape[0] == len(stacked_image_planes):
-            # to make sure that the third index ranges up to len(stacked_image_planes)
-            img_npy = np.swapaxes(img_npy, 0, 2)
-            img_npy = np.swapaxes(img_npy, 0, 1)
-
-        # make first index len(stacked_image_planes)
-        img_npy = np.swapaxes(img_npy, 0, 2)
-        img_npy = np.swapaxes(img_npy, 1, 2)
-
-        dest_file = os.path.join(os.path.join(PREPROCESS_DEST_PATH, class_name), patient_study_id)
-        with open(dest_file + ".pkl", "wb") as pickle_file:
-            pickle.dump(img_npy, pickle_file)
-            # print ("Saved pickle for {}".format(patient_study_id))
+            for i, img_npy in enumerate(img_npy_list):
+                img_npy = handle_dims(img_npy, plane_list[i])
+                save_npy(img_npy, patient_study_id, "_" + str(i))
     except Exception as e:
         logging.error("Exception in processing " + str(patient_study_id))
         logging.error(e)

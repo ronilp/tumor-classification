@@ -47,3 +47,11 @@ def load_testset(Dataset_Class):
                                    num_workers=multiprocessing.cpu_count()) for x in ['test']}
     dataset_sizes = {x: len(datasets[x]) for x in ['test']}
     return dataset_loaders, dataset_sizes
+
+
+def interleave_images(pixel_array):
+    ee = pixel_array[::2, ::2]
+    oo = pixel_array[1::2, 1::2]
+    eo = pixel_array[::2, 1::2]
+    oe = pixel_array[1::2, ::2]
+    return ee, oo, eo, oe
