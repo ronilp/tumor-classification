@@ -1,11 +1,10 @@
 # tumor-classification
 
 Steps to run :
-1. Set up directory structure as
-
-<code>
-
-    Root —— DIPG — dicoms
+1. Set up the directory structure as
+```
+    Root ——--  DIPG — dicoms
+    
 		|
         
 		—— EP — dicoms
@@ -13,8 +12,7 @@ Steps to run :
 		|
         
 		—— MB — dicoms
-<code>  
-        
+```     
     
 2. Set DATA_DIR in training_config.py
 
