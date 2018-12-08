@@ -28,9 +28,9 @@ class MRI_3D_PKL_Dataset(Dataset):
         self.label_arr = []
         self.scanner_arr = []
         self.manufacturer_arr = []
-        class_counts = {}
+        self.class_counts = {}
         for class_name in training_config.ALLOWED_CLASSES:
-            class_counts[class_name] = 0
+            self.class_counts[class_name] = 0
 
         with open(os.path.join(dir_path, mode + ".csv")) as csvfile:
             dataset_reader = csv.reader(csvfile, delimiter=',', quotechar='|')
@@ -40,12 +40,12 @@ class MRI_3D_PKL_Dataset(Dataset):
                 intensity_data = intensity_map[row[0]].split("_")
                 self.manufacturer_arr.append(intensity_data[0])
                 self.scanner_arr.append(intensity_data[1])
-                class_counts[row[1]] += 1
+                self.class_counts[row[1]] += 1
 
         # Calculate len
         self.data_len = len(self.image_arr)
 
-        print(mode + " class counts : " + str(class_counts))
+        print(mode + " class counts : " + str(self.class_counts))
 
     def __getitem__(self, index):
         pkl_path = self.image_arr[index]
@@ -85,6 +85,15 @@ class MRI_3D_PKL_Dataset(Dataset):
 
     def __len__(self):
         return self.data_len
+
+    # TODO: get rid of the assumption that batch size = 1
+    def penalize_loss(self, loss, labels):
+        for key in self.class_to_idx:
+            if self.class_to_idx[key] == labels[0]:
+                class_name = key
+                break
+
+        return loss/self.class_counts[class_name]
 
 
 if __name__ == '__main__':

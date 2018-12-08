@@ -70,6 +70,7 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
                 outputs = model(inputs)
                 _, preds = torch.max(outputs.data, 1)
                 loss = criterion(outputs, labels)
+                loss = dataset_loaders[phase].dataset.penalize_loss(loss, labels)
 
                 # backprop
                 if phase == 'train':
