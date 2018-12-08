@@ -4,7 +4,7 @@ from torchvision import models
 from tqdm import tqdm
 
 from utils.dataset_utils import load_testset
-from mri_dataset.mri_2d_classification_dataset import MRI_2D_Classification_Dataset
+from mri_dataset.mri_2d_npz_dataset import MRI_2D_NPZ_Dataset
 from training_config import GPU_MODE
 from sklearn.metrics import f1_score, precision_score, recall_score, classification_report
 
@@ -14,7 +14,7 @@ model.fc = torch.nn.Linear(num_ftrs, 2)
 
 model.load_state_dict(torch.load('checkpoints/dipg_vs_mb_289_1543417080.7.pt', map_location='cpu'))
 
-dataset_loaders, dataset_sizes = load_testset(MRI_2D_Classification_Dataset)
+dataset_loaders, dataset_sizes = load_testset(MRI_2D_NPZ_Dataset)
 
 running_corrects = 0
 

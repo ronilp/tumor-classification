@@ -8,7 +8,7 @@ import training_config
 from utils import dataset_utils
 
 
-class MRI_3D_Classification_Dataset(Dataset):
+class MRI_2D_NPZ_Dataset(Dataset):
     def __init__(self, npz_path, mode, transforms=None):
         # Read the file path
         self.data_path = npz_path
@@ -29,6 +29,7 @@ class MRI_3D_Classification_Dataset(Dataset):
                 continue
 
             subject_count = 0
+            plane_count = 0
             for patient_id_npz in os.listdir(class_path):
                 subject_count += 1
                 if subject_count > training_config.CLASS_LIMIT:
@@ -37,10 +38,19 @@ class MRI_3D_Classification_Dataset(Dataset):
                     continue
 
                 path = dataset_utils.join_paths(self.data_path, class_name, patient_id_npz)
-                self.image_arr.append(path)
-                self.label_arr.append(self.class_to_idx[class_name])
+                npz = np.load(path)
+                filters = list(npz.keys())
+                for filter in filters:
+                    patient_id = dataset_utils.get_patient_id(patient_id_npz)
+                    for i in range(npz.get(filter).shape[2]):
+                        plane_count += 1
+                        self.image_arr.append(class_name + ":" + patient_id + ":" + filter + ":" + str(i))
+                        self.label_arr.append(self.class_to_idx[class_name])
+
+                npz.close()
 
             class_counts[class_name + "_subjects"] = subject_count
+            class_counts[class_name + "_planes"] = plane_count
 
         # Calculate len
         self.data_len = len(self.image_arr)
@@ -48,43 +58,41 @@ class MRI_3D_Classification_Dataset(Dataset):
         print(mode + " subject counts : " + str(class_counts))
 
     def __getitem__(self, index):
-        npz_path = self.image_arr[index]
+        single_image_name = self.image_arr[index]
 
-        npz = np.load(npz_path)
-        filters = list(npz.keys())
-        filter = filters[0]
-        raw_img = npz.get(filter)
-        npz.close()
+        # Open image
+        (class_name, patient_id, filter, plane) = dataset_utils.get_plane_at_index(single_image_name)
+        path = dataset_utils.join_paths(self.data_path, class_name, patient_id)
 
-        pad = int((raw_img.shape[1] - 244) / 2)
-        raw_img = raw_img[pad:-pad, pad:-pad, :]
+        npz = np.load(path + ".npz")
+        raw_img = npz.get(filter)[:, :, plane]
+        raw_img = np.resize(raw_img, (224, 224))
 
-        raw_img = np.swapaxes(raw_img, 0, 2)
-        raw_img = np.swapaxes(raw_img, 1, 2)
-
-        # standardize
-        raw_img = (raw_img - np.min(raw_img)) / (np.max(raw_img) - np.min(raw_img)) * training_config.MAX_PIXEL_VAL
-
-        # convert to RGB
-        raw_img = np.stack((raw_img,) * 3, axis=1)
+        # Expand dimension for a single channel-image
+        if training_config.SINGLE_CHANNEL:
+            raw_img = np.expand_dims(raw_img, axis=0)
+        else:
+            # Convert raw image to a 3 channel-image
+            raw_img = np.stack((raw_img,) * 3, axis=0)
 
         if self.transforms is not None:
             raw_img = self.transforms(raw_img)
+        npz.close()
 
         # Transform image to tensor
         img_as_tensor = torch.Tensor(raw_img)
 
         # Get label of the image
-        image_label = torch.tensor(self.label_arr[index])
+        single_image_label = torch.tensor(self.label_arr[index])
 
-        return (img_as_tensor, image_label)
+        return (img_as_tensor, single_image_label)
 
     def __len__(self):
         return self.data_len
 
 
 if __name__ == '__main__':
-    custom_dataset = MRI_3D_Classification_Dataset(os.path.join(training_config.DATA_DIR, 'train'), 'train')
+    custom_dataset = MRI_2D_NPZ_Dataset(os.path.join(training_config.DATA_DIR, 'train'), 'train')
     print(custom_dataset.classes)
     print(custom_dataset.data_len)
 
