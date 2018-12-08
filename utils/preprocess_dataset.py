@@ -148,7 +148,6 @@ def stack_images(patient_study_id):
             img_npy_list = [np.float16(np.array(stacked_image_planes)) for stacked_image_planes in plane_list]
 
             for i, img_npy in enumerate(img_npy_list):
-                img_npy = handle_dims(img_npy, plane_list[i])
                 save_npy(img_npy, patient_study_id, manufacturer, scanner, "_" + str(i))
     except Exception as e:
         logging.error("Exception in processing " + str(patient_study_id))
