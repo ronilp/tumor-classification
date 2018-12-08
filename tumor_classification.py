@@ -12,7 +12,7 @@ from tqdm import tqdm
 from models.MRNet import MRNet
 from mri_dataset.mri_3d_pkl_dataset import MRI_3D_PKL_Dataset
 from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, LEARNING_PATIENCE, \
-    EARLY_STOPPING_ENABLED
+    EARLY_STOPPING_ENABLED, WEIGHTED_LOSS_ON
 from utils.dataset_utils import load_datasets_from_csv
 from utils.training_utils import exp_lr_scheduler
 
@@ -70,7 +70,8 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
                 outputs = model(inputs)
                 _, preds = torch.max(outputs.data, 1)
                 loss = criterion(outputs, labels)
-                loss = dataset_loaders[phase].dataset.penalize_loss(loss, labels)
+                if WEIGHTED_LOSS_ON:
+                    loss = dataset_loaders[phase].dataset.penalize_loss(loss, labels)
 
                 # backprop
                 if phase == 'train':
