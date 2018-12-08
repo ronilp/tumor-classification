@@ -1,7 +1,8 @@
 import os
 import csv
+import sys
 from sklearn.model_selection import train_test_split
-
+sys.path.append("..")
 from training_config import RANDOM_SEED
 
 DATA_DIR = "/Users/rpancholia/Documents/Acads/Projects/data/classification-pkl-augmented/"

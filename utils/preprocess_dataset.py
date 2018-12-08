@@ -1,3 +1,4 @@
+import sys
 import csv
 import logging
 import os
@@ -6,7 +7,7 @@ from multiprocessing.pool import ThreadPool
 
 import numpy as np
 import pydicom as dicom
-
+sys.path.append("..")
 from utils.constants import GE, SCANNER_15T
 from utils.dataset_utils import interleave_images, get_manufacturer, get_scanner
 
@@ -62,7 +63,7 @@ def populate_filepath_dict(class_name):
             patient_study_vs_files[key] = []
 
         patient_study_vs_files[key].append(os.path.join(source_dir, file_name))
-    dump_to_csv(patient_study_vs_files, os.path.join(FILEPATH_DICT_PATH, class_name),
+    dump_to_csv(patient_study_vs_files, os.path.join(PREPROCESS_DEST_PATH, class_name),
                 headers=["patient_study_id", "files"])
     logging.info("Created dictionary for patient Ids vs file paths: " + str(class_name))
     return patient_study_vs_files
