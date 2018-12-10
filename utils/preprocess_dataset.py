@@ -162,7 +162,7 @@ if __name__ == "__main__":
         pool = ThreadPool()
         _ = pool.map(stack_images, patient_study_vs_files.keys())
 
-    with open(os.path.join(PREPROCESS_DEST_PATH, "intensity_map.csv"), 'w') as csvfile:
+    with open(os.path.join(PREPROCESS_DEST_PATH, "intensity_map.csv"), 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(["filename", "manufacturer", "scanner"])
         for key in intensity_dict.keys():
