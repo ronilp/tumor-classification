@@ -117,6 +117,18 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
                 early_stop = True
                 break
 
+            try:
+                training_history = {}
+                training_history['train_acc'] = train_acc
+                training_history['train_loss'] = train_loss
+                training_history['val_acc'] = val_acc
+                training_history['val_loss'] = val_loss
+
+                with open(MODEL_PREFIX + '_training_history.pkl', 'wb') as handle:
+                    pickle.dump(training_history, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            except Exception as e:
+                print("Exception in saving training history :" + str(e))
+
     time_elapsed = time.time() - since
 
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
