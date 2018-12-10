@@ -16,11 +16,6 @@ from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BA
 from utils.dataset_utils import load_datasets_from_csv
 from utils.training_utils import exp_lr_scheduler
 
-if GPU_MODE:
-    torch.cuda.set_device(CUDA_DEVICE)
-
-dataset_loaders, dataset_sizes = load_datasets_from_csv(MRI_3D_PKL_Dataset)
-
 def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
     since = time.time()
 
@@ -140,29 +135,36 @@ def set_parameter_requires_grad(model, feature_extracting):
         for param in model.parameters():
             param.requires_grad = False
 
-model_ft = MRNet(NUM_CLASSES)
-print(model_ft)
+if __name__ == '__main__':
+    if GPU_MODE:
+        torch.cuda.set_device(CUDA_DEVICE)
 
-criterion = nn.CrossEntropyLoss()
+    dataset_loaders, dataset_sizes = load_datasets_from_csv(MRI_3D_PKL_Dataset)
 
-if GPU_MODE:
-    criterion.cuda()
-    model_ft.cuda()
 
-optimizer_ft = optim.RMSprop(model_ft.parameters(), lr=BASE_LR)
+    model_ft = MRNet(NUM_CLASSES)
+    print(model_ft)
 
-# Run the functions and save the best model in the function model_ft.
-model_ft, training_history = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=100)
+    criterion = nn.CrossEntropyLoss()
 
-print("Training done")
+    if GPU_MODE:
+        criterion.cuda()
+        model_ft.cuda()
 
-try:
-    with open(MODEL_PREFIX + '_training_history.pkl', 'wb') as handle:
-        pickle.dump(training_history, handle, protocol=pickle.HIGHEST_PROTOCOL)
-except Exception as e:
-    print("Exception in saving training history :" + str(e))
+    optimizer_ft = optim.RMSprop(model_ft.parameters(), lr=BASE_LR)
 
-# Save model
-model_name = MODEL_PREFIX + "_final_" + str(time.time()) + ".pt"
-torch.save(model_ft.state_dict(), os.path.join("checkpoints", model_name))
-print("Saved model :", model_name)
+    # Run the functions and save the best model in the function model_ft.
+    model_ft, training_history = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=100)
+
+    print("Training done")
+
+    try:
+        with open(MODEL_PREFIX + '_training_history.pkl', 'wb') as handle:
+            pickle.dump(training_history, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    except Exception as e:
+        print("Exception in saving training history :" + str(e))
+
+    # Save model
+    model_name = MODEL_PREFIX + "_final_" + str(time.time()) + ".pt"
+    torch.save(model_ft.state_dict(), os.path.join("checkpoints", model_name))
+    print("Saved model :", model_name)
