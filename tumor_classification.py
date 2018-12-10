@@ -52,6 +52,9 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
             # Training batch loop
             for data in tqdm(dataset_loaders[phase]):
                 inputs, labels = data
+                if inputs.shape[3] != 224 or inputs.shape[4] != 224:
+                    print(inputs.shape)
+                    continue
 
                 if GPU_MODE:
                     try:
