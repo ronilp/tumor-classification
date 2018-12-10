@@ -10,6 +10,7 @@ from torch.autograd import Variable
 from tqdm import tqdm
 
 from models.MRNet import MRNet
+from models.MRNet_v2 import MRNet_v2
 from mri_dataset.mri_3d_pkl_dataset import MRI_3D_PKL_Dataset
 from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, LEARNING_PATIENCE, \
     EARLY_STOPPING_ENABLED, WEIGHTED_LOSS_ON
@@ -154,7 +155,7 @@ if __name__ == '__main__':
     dataset_loaders, dataset_sizes = load_datasets_from_csv(MRI_3D_PKL_Dataset)
 
 
-    model_ft = MRNet(NUM_CLASSES)
+    model_ft = MRNet_v2(NUM_CLASSES)
     print(model_ft)
 
     criterion = nn.CrossEntropyLoss()
