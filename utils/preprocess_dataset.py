@@ -141,7 +141,7 @@ def stack_images(patient_study_id):
 
         if not b_augmenting:
             img_npy = np.float16(np.array(stacked_image_planes))
-            img_npy = handle_dims(img_npy, stacked_image_planes)
+            # img_npy = handle_dims(img_npy, stacked_image_planes)
             save_npy(img_npy, patient_study_id, manufacturer, scanner)
         else:
             plane_list = [ee_stacked_image_planes, oo_stacked_image_planes, oe_stacked_image_planes,
