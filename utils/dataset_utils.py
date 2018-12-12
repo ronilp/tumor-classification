@@ -53,10 +53,18 @@ def load_datasets(Dataset_Class):
 def load_testset(Dataset_Class):
     datasets = {x: Dataset_Class(os.path.join(training_config.DATA_DIR, x), x) for x in ['test']}
     dataset_loaders = {
-        x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=True,
+        x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=False,
                                        num_workers=multiprocessing.cpu_count()) for x in ['test']}
     dataset_sizes = {x: len(datasets[x]) for x in ['test']}
     return dataset_loaders, dataset_sizes
+
+def load_testset_from_csv(Dataset_Class):
+    datasets = {x: Dataset_Class(training_config.DATA_DIR, x) for x in ['test']}
+    dataset_loaders = {
+        x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=False,
+                                       num_workers=multiprocessing.cpu_count()) for x in ['test']}
+    dataset_sizes = {x: len(datasets[x]) for x in ['test']}
+    return dataset_loaders, dataset_sizes, datasets
 
 
 def interleave_images(pixel_array):
