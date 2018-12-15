@@ -8,6 +8,8 @@ from torch.utils.data.dataset import Dataset
 
 import training_config
 from utils import dataset_utils
+from utils.constants import CROP_CENTER, CROP_BOTTOM
+
 
 class MRI_3D_PKL_Dataset(Dataset):
     def __init__(self, dir_path, mode):
@@ -52,23 +54,36 @@ class MRI_3D_PKL_Dataset(Dataset):
 
         raw_img = pickle.load(open(pkl_path, "rb"))
 
-        # mid crop
+        # crop to 224 x 224
         pad = int((raw_img.shape[1] - 224) / 2)
-        raw_img = raw_img[:, pad:-pad, pad:-pad]
+        if training_config.CROP_MID_POINT == CROP_CENTER:
+            raw_img = raw_img[:, pad:-pad, pad:-pad]
+        elif training_config.CROP_MID_POINT == CROP_BOTTOM:
+            raw_img = raw_img[:, raw_img.shape[1] - 224:raw_img.shape[1], pad:-pad]
 
-        # normalize intensity
+        # Normalize intensity based on Magnetic Field Strength
         intensity = training_config.INTENSITY_DICT[self.manufacturer_arr[index]][self.scanner_arr[index]]
-        mean = intensity[training_config.MEAN]
-        stddev = intensity[training_config.STD_DEV]
-        raw_img = (raw_img - mean) / stddev
+        max = np.float(intensity[training_config.MAX])
+        mean = np.float(intensity[training_config.MEAN])
+        stddev = np.float(intensity[training_config.STD_DEV])
 
-        # standardize
+        # z-score normalization
+        if training_config.INTENSITY_Z_SCORE_NORM:
+            raw_img = (raw_img - mean) / stddev
+
+        # bring to [0, 1] scale
+        if training_config.INTENSITY_01_NORM:
+            raw_img = np.float32(raw_img / max)
+            mask = (raw_img > 1.0)
+            raw_img[mask] = 1.0
+
+        # min-max normalization : bring to [0, 255] scale
         raw_img = (raw_img - np.min(raw_img)) / (np.max(raw_img) - np.min(raw_img)) * training_config.MAX_PIXEL_VAL
 
-        # convert to RGB
+        # convert to RGB : stack 3 identical planes
         raw_img = np.stack((raw_img,) * 3, axis=1)
 
-        # normalize image-net
+        # normalize for image-net weights
         for i in range(raw_img.shape[0]):
             # for each plane
             for j in range(raw_img.shape[1]):
