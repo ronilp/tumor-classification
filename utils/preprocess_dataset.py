@@ -92,7 +92,7 @@ def handle_dims(img_npy, stacked_image_planes):
 
 def save_npy(img_npy, patient_study_id, manufacturer, scanner, sample=""):
     global intensity_dict
-    dest_file = os.path.join(os.path.join(INPUT_DCM_PATH, class_name), patient_study_id + sample)
+    dest_file = os.path.join(os.path.join(OUTPUT_PREPROCESS_PATH, class_name), patient_study_id + sample)
     intensity_dict[dest_file + ".pkl"] = manufacturer + "_" + scanner
     with open(dest_file + ".pkl", "wb") as pickle_file:
         pickle.dump(img_npy, pickle_file)

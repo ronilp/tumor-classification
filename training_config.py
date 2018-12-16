@@ -4,12 +4,14 @@ from utils.constants import GE, SCANNER_15T, SCANNER_3T, SIEMENS, MEAN, STD_DEV,
 ### Learning Parameters
 BASE_LR = 1e-4
 LR_DECAY_EPOCHS = 10
-LR_DECAY = 0.1
+LR_DECAY_RATE = 0.1
 LEARNING_PATIENCE = 10
 WEIGHTED_LOSS_ON = True
+USE_CUSTOM_LR_DECAY = False
+TRAIN_EPOCHS = 100
 
 ### Dataset Config
-DATA_DIR = '/Users/rpancholia/Documents/Acads/Projects/data/classification-pkl-augmented/'
+DATA_DIR = '../data/classification-pkl-augmented/'
 INPUT_DCM_PATH = "../data/classification-dcm/"
 OUTPUT_PREPROCESS_PATH = "../data/classification-pkl-augmented/"
 ALLOWED_CLASSES = ["MB", "DIPG", "EP"]
@@ -20,7 +22,7 @@ CLASS_LIMIT = 500000
 
 # regression configs
 MODEL_FILTER = "T2 ax"
-AGE_CSV_PATH = '/Users/rpancholia/Documents/Acads/Projects/data/flipped_clinical_NormalPedBrainAge_StanfordCohort.csv'
+AGE_CSV_PATH = '../data/flipped_clinical_NormalPedBrainAge_StanfordCohort.csv'
 
 ### Preprocessing Config
 CROP_SIZE = 224

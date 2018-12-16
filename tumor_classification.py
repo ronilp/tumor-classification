@@ -1,23 +1,24 @@
-import os
 import copy
+import os
+import pickle
 import sys
 import time
-import pickle
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from tqdm import tqdm
 
-from models.MRNet import MRNet
 from models.MRNet_v2 import MRNet_v2
 from mri_dataset.mri_3d_pkl_dataset import MRI_3D_PKL_Dataset
 from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, LEARNING_PATIENCE, \
-    EARLY_STOPPING_ENABLED, WEIGHTED_LOSS_ON, SAVE_EVERY_MODEL
+    EARLY_STOPPING_ENABLED, WEIGHTED_LOSS_ON, SAVE_EVERY_MODEL, USE_CUSTOM_LR_DECAY, TRAIN_EPOCHS
 from utils.dataset_utils import load_datasets_from_csv
-from utils.training_utils import exp_lr_scheduler
+from utils.training_utils import exp_lr_scheduler, save_config
 
 MODEL_DIR = MODEL_PREFIX + "_checkpoints"
+
 
 def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
     since = time.time()
@@ -37,12 +38,13 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
     for epoch in range(num_epochs):
         if early_stop:
             break
-        print('Epoch {}/{}'.format(epoch+1, num_epochs))
+        print('Epoch {}/{}'.format(epoch + 1, num_epochs))
         print('-' * 10)
 
         for phase in ['train', 'val']:
             if phase == 'train':
-                optimizer = lr_scheduler(optimizer, epoch)
+                if USE_CUSTOM_LR_DECAY:
+                    optimizer = lr_scheduler(optimizer, epoch)
                 model.train()
             else:
                 model.eval()
@@ -148,10 +150,12 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
 
     return best_model, training_history
 
+
 def set_parameter_requires_grad(model, feature_extracting):
     if feature_extracting:
         for param in model.parameters():
             param.requires_grad = False
+
 
 if __name__ == '__main__':
     if not os.path.exists(MODEL_DIR):
@@ -161,7 +165,6 @@ if __name__ == '__main__':
         torch.cuda.set_device(CUDA_DEVICE)
 
     dataset_loaders, dataset_sizes = load_datasets_from_csv(MRI_3D_PKL_Dataset)
-
 
     model_ft = MRNet_v2(NUM_CLASSES)
     print(model_ft)
@@ -174,8 +177,11 @@ if __name__ == '__main__':
 
     optimizer_ft = optim.RMSprop(model_ft.parameters(), lr=BASE_LR)
 
+    # save training config
+    save_config(MODEL_DIR, {"optimizer" : optimizer_ft, "model":model_ft})
+
     # Run the functions and save the best model in the function model_ft.
-    model_ft, training_history = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=100)
+    model_ft, training_history = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, TRAIN_EPOCHS)
 
     print("Training done")
 
