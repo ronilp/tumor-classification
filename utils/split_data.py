@@ -3,10 +3,7 @@ import csv
 import sys
 from sklearn.model_selection import train_test_split
 sys.path.append("..")
-from training_config import RANDOM_SEED
-
-DATA_DIR = "/Users/rpancholia/Documents/Acads/Projects/data/classification-pkl-augmented/"
-CLASSES = ["DIPG", "MB", "EP"]
+from training_config import RANDOM_SEED, ALLOWED_CLASSES, DATA_DIR
 
 
 def stratified_split(X, y, test_size=0.2, validate_size=0.2, random_state=42):
@@ -40,7 +37,7 @@ if __name__ == "__main__":
     X = {}
     y = []
     Z = []
-    for class_name in CLASSES:
+    for class_name in ALLOWED_CLASSES:
         class_path = os.path.join(DATA_DIR, class_name)
         files = []
         for file_name in os.listdir(class_path):

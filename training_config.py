@@ -10,6 +10,8 @@ WEIGHTED_LOSS_ON = True
 
 ### Dataset Config
 DATA_DIR = '/Users/rpancholia/Documents/Acads/Projects/data/classification-pkl-augmented/'
+INPUT_DCM_PATH = "../data/classification-dcm/"
+OUTPUT_PREPROCESS_PATH = "../data/classification-pkl-augmented/"
 ALLOWED_CLASSES = ["MB", "DIPG", "EP"]
 NUM_CLASSES = len(ALLOWED_CLASSES)
 # set as False to convert 2D image to 3D RGB image
@@ -21,6 +23,7 @@ MODEL_FILTER = "T2 ax"
 AGE_CSV_PATH = '/Users/rpancholia/Documents/Acads/Projects/data/flipped_clinical_NormalPedBrainAge_StanfordCohort.csv'
 
 ### Preprocessing Config
+CROP_SIZE = 224
 # set crop mid point as either CROP_CENTER or CROP_BOTTOM
 CROP_MID_POINT = CROP_BOTTOM
 INTENSITY_Z_SCORE_NORM = False

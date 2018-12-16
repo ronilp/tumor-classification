@@ -7,17 +7,14 @@ from multiprocessing.pool import ThreadPool
 
 import numpy as np
 import pydicom as dicom
+
+from training_config import ALLOWED_CLASSES, CROP_SIZE, OUTPUT_PREPROCESS_PATH, INPUT_DCM_PATH
+
 sys.path.append("..")
 from utils.constants import GE, SCANNER_15T
 from utils.dataset_utils import interleave_images, get_manufacturer, get_scanner
 
 logging.basicConfig(level=logging.DEBUG)
-
-FILEPATH_DICT_PATH = "/Users/rpancholia/Documents/Acads/Projects/data/classification-pkl"
-ROOT_SRC_PATH = "/Users/rpancholia/Documents/Acads/Projects/data/classification-dcm/"
-PREPROCESS_DEST_PATH = "/Users/rpancholia/Documents/Acads/Projects/data/classification-pkl-augmented/"
-CLASSES = ["DIPG", "MB", "EP"]
-CROP_SIZE = 224
 
 # Flag to augment images by sampling pixels
 SAMPLE_IMAGES = True
@@ -31,10 +28,10 @@ def create_missing_dirs(path):
 
 
 def init_dirs():
-    create_missing_dirs(PREPROCESS_DEST_PATH)
+    create_missing_dirs(OUTPUT_PREPROCESS_PATH)
 
-    for class_name in CLASSES:
-        create_missing_dirs(os.path.join(PREPROCESS_DEST_PATH, class_name))
+    for class_name in ALLOWED_CLASSES:
+        create_missing_dirs(os.path.join(OUTPUT_PREPROCESS_PATH, class_name))
 
 
 # Populate patient/study vs file paths dictionary
@@ -49,7 +46,7 @@ def dump_to_csv(my_dict, path, headers=None):
 
 def populate_filepath_dict(class_name):
     patient_study_vs_files = {}
-    source_dir = os.path.join(ROOT_SRC_PATH, class_name)
+    source_dir = os.path.join(INPUT_DCM_PATH, class_name)
     file_list = os.listdir(source_dir)
     file_list.sort()
     for file_name in file_list:
@@ -63,7 +60,7 @@ def populate_filepath_dict(class_name):
             patient_study_vs_files[key] = []
 
         patient_study_vs_files[key].append(os.path.join(source_dir, file_name))
-    dump_to_csv(patient_study_vs_files, os.path.join(PREPROCESS_DEST_PATH, class_name),
+    dump_to_csv(patient_study_vs_files, os.path.join(OUTPUT_PREPROCESS_PATH, class_name),
                 headers=["patient_study_id", "files"])
     logging.info("Created dictionary for patient Ids vs file paths: " + str(class_name))
     return patient_study_vs_files
@@ -95,7 +92,7 @@ def handle_dims(img_npy, stacked_image_planes):
 
 def save_npy(img_npy, patient_study_id, manufacturer, scanner, sample=""):
     global intensity_dict
-    dest_file = os.path.join(os.path.join(PREPROCESS_DEST_PATH, class_name), patient_study_id + sample)
+    dest_file = os.path.join(os.path.join(INPUT_DCM_PATH, class_name), patient_study_id + sample)
     intensity_dict[dest_file + ".pkl"] = manufacturer + "_" + scanner
     with open(dest_file + ".pkl", "wb") as pickle_file:
         pickle.dump(img_npy, pickle_file)
@@ -157,12 +154,12 @@ def stack_images(patient_study_id):
 
 if __name__ == "__main__":
     init_dirs()
-    for class_name in CLASSES:
+    for class_name in ALLOWED_CLASSES:
         patient_study_vs_files = populate_filepath_dict(class_name)
         pool = ThreadPool()
         _ = pool.map(stack_images, patient_study_vs_files.keys())
 
-    with open(os.path.join(PREPROCESS_DEST_PATH, "intensity_map.csv"), 'w', newline='') as csvfile:
+    with open(os.path.join(OUTPUT_PREPROCESS_PATH, "intensity_map.csv"), 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(["filename", "manufacturer", "scanner"])
         for key in intensity_dict.keys():
