@@ -13,9 +13,11 @@ from models.MRNet import MRNet
 from models.MRNet_v2 import MRNet_v2
 from mri_dataset.mri_3d_pkl_dataset import MRI_3D_PKL_Dataset
 from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, LEARNING_PATIENCE, \
-    EARLY_STOPPING_ENABLED, WEIGHTED_LOSS_ON
+    EARLY_STOPPING_ENABLED, WEIGHTED_LOSS_ON, SAVE_EVERY_MODEL
 from utils.dataset_utils import load_datasets_from_csv
 from utils.training_utils import exp_lr_scheduler
+
+MODEL_DIR = MODEL_PREFIX + "_checkpoints"
 
 def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
     since = time.time()
@@ -102,7 +104,7 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
 
             # Save best model
             if phase == 'val':
-                if epoch_loss < best_loss:
+                if epoch_loss < best_loss or SAVE_EVERY_MODEL:
                     patience = 0
                     best_acc = epoch_acc
                     best_loss = epoch_loss
@@ -110,7 +112,7 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
                     print('Best accuracy: {:4f}'.format(best_acc))
                     print('Best loss: {:4f}'.format(best_loss))
                     model_name = MODEL_PREFIX + "_" + str(epoch) + "_" + str(time.time()) + ".pt"
-                    torch.save(model_ft.state_dict(), os.path.join("checkpoints", model_name))
+                    torch.save(model_ft.state_dict(), os.path.join(MODEL_DIR, model_name))
                     print("Saved model :", model_name)
                 else:
                     patience += 1
@@ -128,7 +130,7 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
                 training_history['val_acc'] = val_acc
                 training_history['val_loss'] = val_loss
 
-                with open(MODEL_PREFIX + '_training_history.pkl', 'wb') as handle:
+                with open(os.path.join(MODEL_DIR, MODEL_PREFIX + '_training_history.pkl'), 'wb') as handle:
                     pickle.dump(training_history, handle, protocol=pickle.HIGHEST_PROTOCOL)
             except Exception as e:
                 print("Exception in saving training history :" + str(e))
@@ -152,6 +154,9 @@ def set_parameter_requires_grad(model, feature_extracting):
             param.requires_grad = False
 
 if __name__ == '__main__':
+    if not os.path.exists(MODEL_DIR):
+        os.makedirs(MODEL_DIR)
+
     if GPU_MODE:
         torch.cuda.set_device(CUDA_DEVICE)
 
@@ -175,12 +180,12 @@ if __name__ == '__main__':
     print("Training done")
 
     try:
-        with open(MODEL_PREFIX + '_training_history.pkl', 'wb') as handle:
+        with open(os.path.join(MODEL_DIR, MODEL_PREFIX + '_training_history.pkl'), 'wb') as handle:
             pickle.dump(training_history, handle, protocol=pickle.HIGHEST_PROTOCOL)
     except Exception as e:
         print("Exception in saving training history :" + str(e))
 
     # Save model
     model_name = MODEL_PREFIX + "_final_" + str(time.time()) + ".pt"
-    torch.save(model_ft.state_dict(), os.path.join("checkpoints", model_name))
+    torch.save(model_ft.state_dict(), os.path.join(MODEL_DIR, model_name))
     print("Saved model :", model_name)
