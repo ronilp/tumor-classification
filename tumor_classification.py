@@ -175,7 +175,7 @@ if __name__ == '__main__':
         criterion.cuda()
         model_ft.cuda()
 
-    optimizer_ft = optim.RMSprop(model_ft.parameters(), lr=BASE_LR)
+    optimizer_ft = optim.Adadelta(model_ft.parameters(), lr=BASE_LR)
 
     # save training config
     save_config(MODEL_DIR, {"optimizer" : optimizer_ft, "model":model_ft})
