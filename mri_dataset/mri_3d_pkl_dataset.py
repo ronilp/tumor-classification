@@ -12,7 +12,7 @@ from utils.constants import CROP_CENTER, CROP_BOTTOM
 
 
 class MRI_3D_PKL_Dataset(Dataset):
-    def __init__(self, dir_path, mode):
+    def __init__(self, dir_path, mode, transforms=None):
         # Read the file path
         self.data_path = dir_path
 
@@ -108,7 +108,7 @@ class MRI_3D_PKL_Dataset(Dataset):
                 class_name = key
                 break
 
-        return loss/self.class_counts[class_name]
+        return loss / self.class_counts[class_name]
 
 
 if __name__ == '__main__':

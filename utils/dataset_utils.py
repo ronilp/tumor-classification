@@ -32,8 +32,8 @@ def find_classes(dir):
     return classes, class_to_idx
 
 
-def load_datasets_from_csv(Dataset_Class):
-    datasets = {x: Dataset_Class(training_config.DATA_DIR, x) for x in ['train', 'val']}
+def load_datasets_from_csv(Dataset_Class, transforms=None):
+    datasets = {x: Dataset_Class(training_config.DATA_DIR, x, transforms) for x in ['train', 'val']}
     dataset_loaders = {
         x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=True,
                                        num_workers=multiprocessing.cpu_count()) for x in ['train', 'val']}
@@ -41,8 +41,8 @@ def load_datasets_from_csv(Dataset_Class):
     return dataset_loaders, dataset_sizes
 
 
-def load_datasets(Dataset_Class):
-    datasets = {x: Dataset_Class(os.path.join(training_config.DATA_DIR, x), x) for x in ['train', 'val']}
+def load_datasets(Dataset_Class, transforms=None):
+    datasets = {x: Dataset_Class(os.path.join(training_config.DATA_DIR, x), x, transforms) for x in ['train', 'val']}
     dataset_loaders = {
         x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=True,
                                        num_workers=multiprocessing.cpu_count()) for x in ['train', 'val']}
@@ -50,16 +50,16 @@ def load_datasets(Dataset_Class):
     return dataset_loaders, dataset_sizes
 
 
-def load_testset(Dataset_Class):
-    datasets = {x: Dataset_Class(os.path.join(training_config.DATA_DIR, x), x) for x in ['test']}
+def load_testset(Dataset_Class, transforms=None):
+    datasets = {x: Dataset_Class(os.path.join(training_config.DATA_DIR, x), x, transforms) for x in ['test']}
     dataset_loaders = {
         x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=False,
                                        num_workers=multiprocessing.cpu_count()) for x in ['test']}
     dataset_sizes = {x: len(datasets[x]) for x in ['test']}
     return dataset_loaders, dataset_sizes
 
-def load_testset_from_csv(Dataset_Class):
-    datasets = {x: Dataset_Class(training_config.DATA_DIR, x) for x in ['test']}
+def load_testset_from_csv(Dataset_Class, transforms=None):
+    datasets = {x: Dataset_Class(training_config.DATA_DIR, x, transforms) for x in ['test']}
     dataset_loaders = {
         x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=False,
                                        num_workers=multiprocessing.cpu_count()) for x in ['test']}

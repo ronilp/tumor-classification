@@ -9,11 +9,14 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from tqdm import tqdm
-
+from torchvision import transforms
 from models.MRNet_v2 import MRNet_v2
-from mri_dataset.mri_3d_pkl_dataset import MRI_3D_PKL_Dataset
+from mri_dataset.mri_3d_transformer_dataset import MRI_3D_Transformer_Dataset
 from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, LEARNING_PATIENCE, \
     EARLY_STOPPING_ENABLED, WEIGHTED_LOSS_ON, SAVE_EVERY_MODEL, USE_CUSTOM_LR_DECAY, TRAIN_EPOCHS
+from transformation.aug_rescaler import AugmentedImageScaler
+from transformation.cropping import Cropper
+from transformation.rgb_converter import RGBConverter
 from utils.dataset_utils import load_datasets_from_csv
 from utils.training_utils import exp_lr_scheduler, save_config
 
@@ -164,7 +167,13 @@ if __name__ == '__main__':
     if GPU_MODE:
         torch.cuda.set_device(CUDA_DEVICE)
 
-    dataset_loaders, dataset_sizes = load_datasets_from_csv(MRI_3D_PKL_Dataset)
+    transforms = transforms.Compose([
+        AugmentedImageScaler(),
+        Cropper(),
+        RGBConverter()
+    ])
+
+    dataset_loaders, dataset_sizes = load_datasets_from_csv(MRI_3D_Transformer_Dataset, transforms=transforms)
 
     model_ft = MRNet_v2(NUM_CLASSES)
     print(model_ft)
@@ -178,7 +187,7 @@ if __name__ == '__main__':
     optimizer_ft = optim.Adadelta(model_ft.parameters(), lr=BASE_LR)
 
     # save training config
-    save_config(MODEL_DIR, {"optimizer" : optimizer_ft, "model":model_ft})
+    save_config(MODEL_DIR, {"optimizer": optimizer_ft, "model": model_ft})
 
     # Run the functions and save the best model in the function model_ft.
     model_ft, training_history = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, TRAIN_EPOCHS)

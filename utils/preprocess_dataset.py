@@ -17,7 +17,7 @@ from utils.dataset_utils import interleave_images, get_manufacturer, get_scanner
 logging.basicConfig(level=logging.DEBUG)
 
 # Flag to augment images by sampling pixels
-SAMPLE_IMAGES = True
+SAMPLE_IMAGES = False
 
 intensity_dict = {}
 
