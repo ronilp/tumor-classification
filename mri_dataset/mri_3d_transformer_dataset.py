@@ -150,6 +150,7 @@ if __name__ == '__main__':
             idx_to_class[class_to_idx[key]] = key
 
         for i, dcm_id in enumerate(d.image_arr):
+            print("Saving " + str(i) + " of " + str(len(d.image_arr)) + " in " + set_type)
             (img, label) = d.__getitem__(i)
             class_label = idx_to_class[label.item()]
             dcm_id = dcm_id.split("/")[-1].replace(".pkl", "")
@@ -158,3 +159,5 @@ if __name__ == '__main__':
             for j in range(len(img_planes)):
                 plane = img_planes[j]
                 plt.imsave(os.path.join(class_path, dcm_id + "_" + str(j) + ".png"), plane)
+
+    print("Saving images completed")
