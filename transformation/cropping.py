@@ -1,5 +1,6 @@
 import training_config
 from utils.constants import CROP_CENTER, CROP_BOTTOM
+import numpy as np
 
 
 class Cropper(object):
@@ -7,7 +8,7 @@ class Cropper(object):
         pass
 
     def __call__(self, img):
-        pad = int((img.shape[1] - training_config.CROP_SIZE) / 2)
+        pad = int((min(img.shape[1], img.shape[2]) - training_config.CROP_SIZE) / 2)
         if training_config.CROP_MID_POINT == CROP_CENTER:
             cropped_img = img[:, pad:-pad, pad:-pad]
         elif training_config.CROP_MID_POINT == CROP_BOTTOM:
