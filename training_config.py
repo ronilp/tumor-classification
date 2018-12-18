@@ -11,9 +11,12 @@ USE_CUSTOM_LR_DECAY = False
 TRAIN_EPOCHS = 100
 
 ### Dataset Config
-DATA_DIR = "../data/classification-data/Stanford-T2-ax-roi-pkl/"
+# Input for preprocess_dataset.py
 INPUT_DCM_PATH = "../data/classification-data/Stanford-T2-ax-roi"
+# Output for preprocess_dataset.py
 OUTPUT_PREPROCESS_PATH = "../data/classification-data/Stanford-T2-ax-roi-pkl/"
+# Input for split_data and datasets
+DATA_DIR = "../data/classification-data/Stanford-T2-ax-roi-pkl/"
 ALLOWED_CLASSES = ["MB", "DIPG", "EP", "PILO"]
 NUM_CLASSES = len(ALLOWED_CLASSES)
 # set as False to convert 2D image to 3D RGB image
