@@ -14,10 +14,10 @@ Steps to run :
 		—— MB — dicoms
 ```     
     
-2. Set DATA_DIR in training_config.py
+2. Set configs in training_config.py
 
 3. Run utils/preprocess_dataset.py
 
-4. Run mri_dataset/split_data.py
+4. Run utils/split_data.py
 
-5. Run tumor_classification.py 
+5. Run train_classification.py 
