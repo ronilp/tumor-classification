@@ -11,10 +11,10 @@ USE_CUSTOM_LR_DECAY = False
 TRAIN_EPOCHS = 100
 
 ### Dataset Config
-DATA_DIR = '../data/classification-pkl-augmented/'
-INPUT_DCM_PATH = "../data/classification-dcm/"
-OUTPUT_PREPROCESS_PATH = "../data/classification-pkl-augmented/"
-ALLOWED_CLASSES = ["MB", "DIPG", "EP"]
+DATA_DIR = "../data/classification-data/Stanford-T2-ax-roi-pkl/"
+INPUT_DCM_PATH = "../data/classification-data/Stanford-T2-ax-roi"
+OUTPUT_PREPROCESS_PATH = "../data/classification-data/Stanford-T2-ax-roi-pkl/"
+ALLOWED_CLASSES = ["MB", "DIPG", "EP", "PILO"]
 NUM_CLASSES = len(ALLOWED_CLASSES)
 # set as False to convert 2D image to 3D RGB image
 SINGLE_CHANNEL = False
@@ -22,7 +22,7 @@ CLASS_LIMIT = 500000
 
 # regression configs
 MODEL_FILTER = "T2 ax"
-AGE_CSV_PATH = '../data/flipped_clinical_NormalPedBrainAge_StanfordCohort.csv'
+AGE_CSV_PATH = "../data/flipped_clinical_NormalPedBrainAge_StanfordCohort.csv"
 
 ### Preprocessing Config
 CROP_SIZE = 224

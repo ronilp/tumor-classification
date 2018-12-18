@@ -2,6 +2,7 @@ import csv
 import os
 import pickle
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
@@ -10,7 +11,6 @@ from torchvision import transforms
 import training_config
 from transformation.aug_rescaler import AugmentedImageScaler
 from transformation.cropping import Cropper
-from transformation.rgb_converter import RGBConverter
 from utils import dataset_utils
 
 
@@ -108,8 +108,7 @@ class MRI_3D_Transformer_Dataset(Dataset):
 if __name__ == '__main__':
     transforms = transforms.Compose([
         AugmentedImageScaler(),
-        Cropper(),
-        RGBConverter()
+        Cropper()
     ])
     custom_dataset = MRI_3D_Transformer_Dataset(training_config.DATA_DIR, 'train', transforms=transforms)
     print(custom_dataset.classes)
@@ -122,11 +121,40 @@ if __name__ == '__main__':
     mn_dataset_loader = torch.utils.data.DataLoader(dataset=custom_dataset, batch_size=training_config.BATCH_SIZE,
                                                     shuffle=False)
 
-    for images, labels in mn_dataset_loader:
-        # Feed the data to the model
-        print(images.shape)
-        print(labels)
 
-        for i in range(len(images)):
-            print(images[i].numpy().shape)
-            print(labels[i])
+    def load_dataset(Dataset_Class, transforms=None):
+        set_types = ['train', 'val', 'test']
+        datasets = {x: Dataset_Class(training_config.DATA_DIR, x, transforms) for x in set_types}
+        dataset_loaders = {
+            x: torch.utils.data.DataLoader(datasets[x], batch_size=training_config.BATCH_SIZE, shuffle=False,
+                                           num_workers=1) for x in set_types}
+        dataset_sizes = {x: len(datasets[x]) for x in set_types}
+        return dataset_loaders, dataset_sizes, datasets
+
+
+    dataset_loaders, dataset_sizes, datasets = load_dataset(MRI_3D_Transformer_Dataset, transforms)
+    IMAGE_SAVE_DIR = "generated_images"
+    if not os.path.exists(IMAGE_SAVE_DIR):
+        os.makedirs(IMAGE_SAVE_DIR)
+    for class_label in set(datasets['train'].class_to_idx.keys()):
+        if not os.path.exists(os.path.join(IMAGE_SAVE_DIR, class_label)):
+            os.makedirs(os.path.join(IMAGE_SAVE_DIR, class_label))
+
+    i = 0
+    for set_type in ['train', 'test', 'val']:
+        d = datasets[set_type]
+        # invert class_to_idx
+        class_to_idx = d.class_to_idx
+        idx_to_class = {}
+        for key in class_to_idx.keys():
+            idx_to_class[class_to_idx[key]] = key
+
+        for i, dcm_id in enumerate(d.image_arr):
+            (img, label) = d.__getitem__(i)
+            class_label = idx_to_class[label.item()]
+            dcm_id = dcm_id.split("/")[-1].replace(".pkl", "")
+            class_path = os.path.join(IMAGE_SAVE_DIR, class_label)
+            img_planes = img.numpy()
+            for j in range(len(img_planes)):
+                plane = img_planes[j]
+                plt.imsave(os.path.join(class_path, dcm_id + "_" + str(j) + ".png"), plane)

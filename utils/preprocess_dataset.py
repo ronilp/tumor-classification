@@ -1,8 +1,8 @@
-import sys
 import csv
 import logging
 import os
 import pickle
+import sys
 from multiprocessing.pool import ThreadPool
 
 import numpy as np
@@ -21,6 +21,7 @@ SAMPLE_IMAGES = False
 
 intensity_dict = {}
 
+
 def create_missing_dirs(path):
     if not os.path.exists(path):
         logging.info("Creating directory at " + path)
@@ -36,7 +37,7 @@ def init_dirs():
 
 # Populate patient/study vs file paths dictionary
 def dump_to_csv(my_dict, path, headers=None):
-    with open(path + ".csv", "w") as csv_file:
+    with open(path + ".csv", "w", newline="") as csv_file:
         writer = csv.writer(csv_file)
         if headers is not None:
             writer.writerow(headers)
@@ -52,10 +53,9 @@ def populate_filepath_dict(class_name):
     for file_name in file_list:
         if not file_name.endswith(".dcm"):
             continue
-        splitted_terms = file_name.split("-")
-        patient_id = splitted_terms[1].replace("_", "") # remove _ from patient_ids
-        study_id = "-".join(splitted_terms[2:-1])
-        key = patient_id + "_" + study_id
+        splitted_terms = file_name.split("-IM-")
+        img_terms = splitted_terms[1].split("-")
+        key = splitted_terms[0].replace("_", "").replace("-", "") + "-IM-" + img_terms[0]
         if key not in patient_study_vs_files.keys():
             patient_study_vs_files[key] = []
 
@@ -159,8 +159,8 @@ if __name__ == "__main__":
         pool = ThreadPool()
         _ = pool.map(stack_images, patient_study_vs_files.keys())
 
-    with open(os.path.join(OUTPUT_PREPROCESS_PATH, "intensity_map.csv"), 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    with open(os.path.join(OUTPUT_PREPROCESS_PATH, "intensity_map.csv"), "w", newline="") as csvfile:
+        writer = csv.writer(csvfile, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL)
         writer.writerow(["filename", "manufacturer", "scanner"])
         for key in intensity_dict.keys():
             values = intensity_dict[key].split("_")
