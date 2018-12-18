@@ -8,15 +8,15 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
-from tqdm import tqdm
 from torchvision import transforms
-from models.MRNet_v2 import MRNet_v2
+from tqdm import tqdm
+
+from models.MRNet_2D import MRNet_2D
 from mri_dataset.mri_3d_transformer_dataset import MRI_3D_Transformer_Dataset
 from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, LEARNING_PATIENCE, \
     EARLY_STOPPING_ENABLED, WEIGHTED_LOSS_ON, SAVE_EVERY_MODEL, USE_CUSTOM_LR_DECAY, TRAIN_EPOCHS
 from transformation.aug_rescaler import AugmentedImageScaler
 from transformation.cropping import Cropper
-from transformation.rgb_converter import RGBConverter
 from utils.dataset_utils import load_datasets_from_csv
 from utils.training_utils import exp_lr_scheduler, save_config
 
@@ -169,13 +169,12 @@ if __name__ == '__main__':
 
     transforms = transforms.Compose([
         AugmentedImageScaler(),
-        Cropper(),
-        RGBConverter()
+        Cropper()
     ])
 
     dataset_loaders, dataset_sizes = load_datasets_from_csv(MRI_3D_Transformer_Dataset, transforms=transforms)
 
-    model_ft = MRNet_v2(NUM_CLASSES)
+    model_ft = MRNet_2D(NUM_CLASSES)
     print(model_ft)
 
     criterion = nn.CrossEntropyLoss()

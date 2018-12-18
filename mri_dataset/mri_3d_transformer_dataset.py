@@ -1,7 +1,7 @@
 import csv
 import os
 import pickle
-
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -81,9 +81,16 @@ class MRI_3D_Transformer_Dataset(Dataset):
         # min-max normalization : bring to [0, 255] scale
         raw_img = (raw_img - np.min(raw_img)) / (np.max(raw_img) - np.min(raw_img)) * training_config.MAX_PIXEL_VAL
 
+        if raw_img.shape[1] < 224 or raw_img.shape[2] < 224:
+            new_img = []
+            for plane in raw_img:
+                new_img.append(cv2.resize(plane, dsize=(224, 224), interpolation=cv2.INTER_CUBIC))
+            raw_img = np.array(new_img)
+
         if self.transforms is not None:
             raw_img = self.transforms(raw_img)
 
+        raw_img = np.expand_dims(raw_img, axis=1)
         # Transform image to tensor
         img_as_tensor = torch.Tensor(raw_img)
 
@@ -141,7 +148,7 @@ if __name__ == '__main__':
             os.makedirs(os.path.join(IMAGE_SAVE_DIR, class_label))
 
     i = 0
-    for set_type in ['train', 'test', 'val']:
+    for set_type in ['val']:
         d = datasets[set_type]
         # invert class_to_idx
         class_to_idx = d.class_to_idx

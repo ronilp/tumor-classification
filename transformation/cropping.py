@@ -12,7 +12,11 @@ class Cropper(object):
         if training_config.CROP_MID_POINT == CROP_CENTER:
             cropped_img = img[:, pad:-pad, pad:-pad]
         elif training_config.CROP_MID_POINT == CROP_BOTTOM:
-            cropped_img = img[:, img.shape[1] - training_config.CROP_SIZE:img.shape[1], pad:-pad]
+            if pad != 0:
+                cropped_img = img[:, img.shape[1] - training_config.CROP_SIZE:img.shape[1], pad:-pad]
+            else:
+                cropped_img = img[:, img.shape[1] - training_config.CROP_SIZE:img.shape[1], :]
+
         else:
             # No crop
             cropped_img = img
