@@ -16,7 +16,6 @@ class Cropper(object):
                 cropped_img = img[:, img.shape[1] - training_config.CROP_SIZE:img.shape[1], pad:-pad]
             else:
                 cropped_img = img[:, img.shape[1] - training_config.CROP_SIZE:img.shape[1], :]
-
         else:
             # No crop
             cropped_img = img

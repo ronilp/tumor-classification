@@ -5,20 +5,24 @@ from utils.constants import GE, SCANNER_15T, SCANNER_3T, SIEMENS, MEAN, STD_DEV,
 BASE_LR = 1e-4
 LR_DECAY_EPOCHS = 10
 LR_DECAY_RATE = 0.1
-LEARNING_PATIENCE = 10
+LEARNING_PATIENCE = 100
 WEIGHTED_LOSS_ON = False
 USE_CUSTOM_LR_DECAY = False
-TRAIN_EPOCHS = 100
+TRAIN_EPOCHS = 1000
 DELAYED_BACKPROP_ON = False
-DELAYED_BATCH_SIZE = 2
+DELAYED_BATCH_SIZE = 1
+EARLY_STOPPING_ENABLED = False
 
 ### Dataset Config
 # Input for preprocess_dataset.py
-INPUT_DCM_PATH = "../data/classification-data/Stanford-T2-ax-roi"
+# INPUT_DCM_PATH = "../data/classification-data/Stanford-T2-ax-roi"
+INPUT_DCM_PATH = "../data/classification-data/ST-T2-all"
 # Output for preprocess_dataset.py
-OUTPUT_PREPROCESS_PATH = "../data/classification-data/Stanford-T2-ax-roi-pkl/"
+# OUTPUT_PREPROCESS_PATH = "../data/classification-data/Stanford-T2-ax-roi-pkl/"
+OUTPUT_PREPROCESS_PATH = "../data/classification-data/ST-T2-all-pkl/"
 # Input for split_data and datasets
-DATA_DIR = "../data/classification-data/Stanford-T2-ax-roi-pkl/"
+# DATA_DIR = "../data/classification-data/Stanford-T2-ax-roi-pkl/"
+DATA_DIR = "../data/classification-data/ST-T2-all-pkl/"
 ALLOWED_CLASSES = ["MB", "DIPG", "EP", "PILO"]
 NUM_CLASSES = len(ALLOWED_CLASSES)
 # set as False to convert 2D image to 3D RGB image
@@ -39,7 +43,6 @@ INTENSITY_01_NORM = True
 ### Miscellaneous Config
 MODEL_PREFIX = "dipg_vs_mb_vs_eb"
 BATCH_SIZE = 1
-EARLY_STOPPING_ENABLED = True
 MAX_PIXEL_VAL = 255
 RANDOM_SEED = 150
 SAVE_EVERY_MODEL = False

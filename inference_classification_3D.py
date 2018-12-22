@@ -9,12 +9,22 @@ from models.MRNet import MRNet
 from mri_dataset.mri_3d_pkl_dataset import MRI_3D_PKL_Dataset
 from mri_dataset.mri_3d_transformer_dataset import MRI_3D_Transformer_Dataset
 from training_config import GPU_MODE, NUM_CLASSES
+from transformation.aug_rescaler import AugmentedImageScaler
+from transformation.cropping import Cropper
+from transformation.rgb_converter import RGBConverter
 from utils.dataset_utils import load_testset_from_csv
+from torchvision import transforms
 
 model = MRNet_2D(NUM_CLASSES)
-model.load_state_dict(torch.load('dipg_vs_mb_vs_eb_checkpoints/dipg_vs_mb_vs_eb_final_1545109451.6726425.pt', map_location='cpu'))
+model.load_state_dict(torch.load('dipg_vs_mb_vs_eb_checkpoints/dipg_vs_mb_vs_eb_1_1545103167.473354.pt', map_location='cpu'))
 
-dataset_loaders, dataset_sizes, datasets = load_testset_from_csv(MRI_3D_Transformer_Dataset)
+transforms = transforms.Compose([
+        AugmentedImageScaler(),
+        Cropper(),
+        RGBConverter()
+    ])
+
+dataset_loaders, dataset_sizes, datasets = load_testset_from_csv(MRI_3D_Transformer_Dataset, transforms)
 
 
 # invert class_to_idx
@@ -63,9 +73,9 @@ for key, value in sorted(idx_to_class.items()):
 
 print(classification_report(y_true, y_pred, target_names=target_names))
 print('accuracy :', float(running_corrects) / dataset_sizes['test'])
-print(f1_score(y_true, y_pred, average="macro"))
-print(precision_score(y_true, y_pred, average="macro"))
-print(recall_score(y_true, y_pred, average="macro"))
+print("overall f1 weighted:", f1_score(y_true, y_pred, average="weighted"))
+print("overall precision weighted:", precision_score(y_true, y_pred, average="weighted"))
+print("overall recall weighted:", recall_score(y_true, y_pred, average="weighted"))
 
 images = datasets['test'].image_arr
 labels = datasets['test'].label_arr

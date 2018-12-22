@@ -1,8 +1,8 @@
 import csv
 import logging
 import os
-import pickle
 import sys
+import pickle
 from multiprocessing.pool import ThreadPool
 
 import numpy as np
@@ -42,7 +42,15 @@ def dump_to_csv(my_dict, path, headers=None):
         if headers is not None:
             writer.writerow(headers)
         for key, value in my_dict.items():
-            writer.writerow([key, value])
+            try:
+                writer.writerow([key, value[3:18]])
+            except:
+                print("Exception :" + str(key) + ", count = " + str(len(value)))
+                try:
+                    writer.writerow([key, value[:15]])
+                except:
+                    print("Again exception :" + str(key) + ", count = " + str(len(value)))
+                    writer.writerow([key, value])
 
 
 def populate_filepath_dict(class_name):

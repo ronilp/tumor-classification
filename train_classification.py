@@ -1,9 +1,11 @@
 import copy
 import os
 import pickle
+
+import gc
+import numpy as np
 import sys
 import time
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -11,7 +13,6 @@ from torch.autograd import Variable
 from torchvision import transforms
 from tqdm import tqdm
 
-from models.MRNet_2D import MRNet_2D
 from models.MRNet_v2 import MRNet_v2
 from mri_dataset.mri_3d_transformer_dataset import MRI_3D_Transformer_Dataset
 from training_config import GPU_MODE, CUDA_DEVICE, NUM_CLASSES, MODEL_PREFIX, BASE_LR, LEARNING_PATIENCE, \
@@ -26,25 +27,29 @@ from utils.training_utils import exp_lr_scheduler, save_config
 MODEL_DIR = MODEL_PREFIX + "_checkpoints"
 
 
-def backprop(phase, loss, optimizer, running_loss, running_corrects, preds, labels, total_processed):
+def backprop(phase, loss, optimizer, running_loss, running_corrects, preds, labels):
     if phase == 'train':
         loss.backward()
         optimizer.step()
 
     try:
         running_loss += loss.item()
-        running_corrects += torch.sum(preds == labels.data)
-        total_processed += preds.shape[0]
+        running_corrects += np.sum(preds == labels)
+        del loss
+        torch.cuda.empty_cache()
         # print(labels.data)
         # print(preds)
         # print('accuracy :', float(running_corrects) / total_processed)
     except Exception as e:
         print('Exception in calculating loss :' + str(e))
 
-    return running_loss, running_corrects, total_processed
+    return running_loss, running_corrects
 
 
 def min_class_count(class_counts=dict()):
+    if len(class_counts.keys()) < NUM_CLASSES:
+        return 0
+
     min_count = sys.maxsize
     for key in class_counts.keys():
         min_count = min(class_counts[key], min_count)
@@ -83,8 +88,6 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
 
             running_loss = 0.0
             running_corrects = 0
-            total_processed = 0
-
             class_counts = {}
             loss = 0
 
@@ -112,20 +115,49 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
                 outputs = model(inputs)
                 _, preds = torch.max(outputs.data, 1)
                 step_loss = criterion(outputs, labels)
+
                 if WEIGHTED_LOSS_ON:
-                    loss += dataset_loaders[phase].dataset.penalize_loss(step_loss, labels)
+                    weighted_loss = dataset_loaders[phase].dataset.penalize_loss(step_loss, labels)
+                    if type(loss) == int:
+                        loss = weighted_loss
+                    else:
+                        loss += weighted_loss
                 else:
-                    loss += step_loss
+                    if type(loss) == int:
+                        loss = step_loss
+                    else:
+                        loss += step_loss
+
+                preds = preds.item()
+                labels = labels.item()
 
                 # delayed backprop
                 if (not DELAYED_BACKPROP_ON) or min_class_count(class_counts) >= DELAYED_BATCH_SIZE:
-                    running_loss, running_corrects, total_processed = backprop(phase, loss, optimizer, running_loss,
-                                                                               running_corrects, preds, labels,
-                                                                               total_processed)
-                    loss = 0
+                    if phase == 'train':
+                        loss.backward()
+                        optimizer.step()
 
+                    running_loss += loss.item()
+                    del loss
+                    loss = 0
+                    torch.cuda.empty_cache()
+                    class_counts = {}
+
+                running_corrects += np.sum(preds == labels)
+                torch.cuda.empty_cache()
+
+            if len(class_counts.keys()) > 0:
+                if phase == 'train':
+                    loss.backward()
+                    optimizer.step()
+
+                running_loss += loss.item()
+                running_corrects += np.sum(preds == labels)
+                del loss
+
+            torch.cuda.empty_cache()
             epoch_loss = running_loss / dataset_sizes[phase]
-            epoch_acc = running_corrects.item() / float(dataset_sizes[phase])
+            epoch_acc = running_corrects / float(dataset_sizes[phase])
             print('\nEpoch: {} {} Loss: {:.4f} Acc: {:.4f}'.format(epoch + 1, phase, epoch_loss, epoch_acc))
             time_elapsed = time.time() - since
             print('Time Elapsed :{:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
