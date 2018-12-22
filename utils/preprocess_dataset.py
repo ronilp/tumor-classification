@@ -4,6 +4,7 @@ import os
 import sys
 import pickle
 from multiprocessing.pool import ThreadPool
+import multiprocessing
 
 import numpy as np
 import pydicom as dicom
@@ -44,10 +45,12 @@ def dump_to_csv(my_dict, path, headers=None):
         for key, value in my_dict.items():
             try:
                 writer.writerow([key, value[3:18]])
+                my_dict[key] = value[3:18]
             except:
                 print("Exception :" + str(key) + ", count = " + str(len(value)))
                 try:
                     writer.writerow([key, value[:15]])
+                    my_dict[key] = value[:15]
                 except:
                     print("Again exception :" + str(key) + ", count = " + str(len(value)))
                     writer.writerow([key, value])
@@ -164,7 +167,7 @@ if __name__ == "__main__":
     init_dirs()
     for class_name in ALLOWED_CLASSES:
         patient_study_vs_files = populate_filepath_dict(class_name)
-        pool = ThreadPool()
+        pool = ThreadPool(multiprocessing.cpu_count())
         _ = pool.map(stack_images, patient_study_vs_files.keys())
 
     with open(os.path.join(OUTPUT_PREPROCESS_PATH, "intensity_map.csv"), "w", newline="") as csvfile:
