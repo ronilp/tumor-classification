@@ -4,15 +4,17 @@ from sklearn.metrics import f1_score, precision_score, recall_score, classificat
 from torch.autograd import Variable
 from tqdm import tqdm
 
+from models.MRNet_2D import MRNet_2D
 from models.MRNet import MRNet
 from mri_dataset.mri_3d_pkl_dataset import MRI_3D_PKL_Dataset
+from mri_dataset.mri_3d_transformer_dataset import MRI_3D_Transformer_Dataset
 from training_config import GPU_MODE, NUM_CLASSES
 from utils.dataset_utils import load_testset_from_csv
 
-model = MRNet(NUM_CLASSES)
-model.load_state_dict(torch.load('checkpoints/dipg_vs_mb_vs_eb_0_1544266690.477391.pt', map_location='cpu'))
+model = MRNet_2D(NUM_CLASSES)
+model.load_state_dict(torch.load('dipg_vs_mb_vs_eb_checkpoints/dipg_vs_mb_vs_eb_final_1545109451.6726425.pt', map_location='cpu'))
 
-dataset_loaders, dataset_sizes, datasets = load_testset_from_csv(MRI_3D_PKL_Dataset)
+dataset_loaders, dataset_sizes, datasets = load_testset_from_csv(MRI_3D_Transformer_Dataset)
 
 
 # invert class_to_idx

@@ -11,6 +11,7 @@ from torchvision import transforms
 import training_config
 from transformation.aug_rescaler import AugmentedImageScaler
 from transformation.cropping import Cropper
+from transformation.rgb_converter import RGBConverter
 from utils import dataset_utils
 
 
@@ -90,7 +91,9 @@ class MRI_3D_Transformer_Dataset(Dataset):
         if self.transforms is not None:
             raw_img = self.transforms(raw_img)
 
-        raw_img = np.expand_dims(raw_img, axis=1)
+         # uncomment for non-rgb images
+        # raw_img = np.expand_dims(raw_img, axis=1)
+
         # Transform image to tensor
         img_as_tensor = torch.Tensor(raw_img)
 
@@ -115,7 +118,8 @@ class MRI_3D_Transformer_Dataset(Dataset):
 if __name__ == '__main__':
     transforms = transforms.Compose([
         AugmentedImageScaler(),
-        Cropper()
+        Cropper(),
+        RGBConverter()
     ])
     custom_dataset = MRI_3D_Transformer_Dataset(training_config.DATA_DIR, 'train', transforms=transforms)
     print(custom_dataset.classes)
@@ -148,7 +152,7 @@ if __name__ == '__main__':
             os.makedirs(os.path.join(IMAGE_SAVE_DIR, class_label))
 
     i = 0
-    for set_type in ['val']:
+    for set_type in ['train', 'test', 'val']:
         d = datasets[set_type]
         # invert class_to_idx
         class_to_idx = d.class_to_idx
@@ -165,6 +169,8 @@ if __name__ == '__main__':
             img_planes = img.numpy()
             for j in range(len(img_planes)):
                 plane = img_planes[j]
-                plt.imsave(os.path.join(class_path, dcm_id + "_" + str(j) + ".png"), plane)
+                # plane = np.swapaxes(plane, 0, 1)
+                # plane = np.swapaxes(plane, 1, 2)
+                plt.imsave(os.path.join(class_path, dcm_id + "_" + str(j) + ".png"), plane[:,:,0])
 
     print("Saving images completed")
