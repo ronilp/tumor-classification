@@ -89,12 +89,11 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
             running_loss = 0.0
             running_corrects = 0
             class_counts = {}
-            loss = 0
 
             # Training batch loop
             for data in tqdm(dataset_loaders[phase]):
                 inputs, labels = data
-                if inputs.shape[3] != 224 or inputs.shape[4] != 224:
+                if len(inputs.shape) != 5 or inputs.shape[3] != 224 or inputs.shape[4] != 224:
                     print(inputs.shape)
                     continue
                 if labels.item() not in class_counts:
@@ -114,46 +113,20 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=5):
                 optimizer.zero_grad()
                 outputs = model(inputs)
                 _, preds = torch.max(outputs.data, 1)
-                step_loss = criterion(outputs, labels)
-
-                if WEIGHTED_LOSS_ON:
-                    weighted_loss = dataset_loaders[phase].dataset.penalize_loss(step_loss, labels)
-                    if type(loss) == int:
-                        loss = weighted_loss
-                    else:
-                        loss += weighted_loss
-                else:
-                    if type(loss) == int:
-                        loss = step_loss
-                    else:
-                        loss += step_loss
-
+                loss = criterion(outputs, labels)
                 preds = preds.item()
                 labels = labels.item()
 
                 # delayed backprop
-                if (not DELAYED_BACKPROP_ON) or min_class_count(class_counts) >= DELAYED_BATCH_SIZE:
-                    if phase == 'train':
-                        loss.backward()
-                        optimizer.step()
-
-                    running_loss += loss.item()
-                    del loss
-                    loss = 0
-                    torch.cuda.empty_cache()
-                    class_counts = {}
-
-                running_corrects += np.sum(preds == labels)
-                torch.cuda.empty_cache()
-
-            if len(class_counts.keys()) > 0:
                 if phase == 'train':
                     loss.backward()
                     optimizer.step()
 
                 running_loss += loss.item()
-                running_corrects += np.sum(preds == labels)
                 del loss
+                class_counts = {}
+                running_corrects += np.sum(preds == labels)
+                torch.cuda.empty_cache()
 
             torch.cuda.empty_cache()
             epoch_loss = running_loss / dataset_sizes[phase]

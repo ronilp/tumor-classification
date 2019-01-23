@@ -80,7 +80,11 @@ class MRI_3D_Transformer_Dataset(Dataset):
             raw_img[mask] = 1.0
 
         # min-max normalization : bring to [0, 255] scale
-        raw_img = (raw_img - np.min(raw_img)) / (np.max(raw_img) - np.min(raw_img)) * training_config.MAX_PIXEL_VAL
+        try:
+            raw_img = (raw_img - np.min(raw_img)) / (np.max(raw_img) - np.min(raw_img)) * training_config.MAX_PIXEL_VAL
+        except Exception as e:
+            print(self.image_arr[index])
+            return (torch.Tensor(raw_img), torch.tensor(self.label_arr[index]))
 
         if raw_img.shape[1] < 224 or raw_img.shape[2] < 224:
             new_img = []
@@ -171,6 +175,7 @@ if __name__ == '__main__':
                 plane = img_planes[j]
                 # plane = np.swapaxes(plane, 0, 1)
                 # plane = np.swapaxes(plane, 1, 2)
-                plt.imsave(os.path.join(class_path, dcm_id + "_" + str(j) + ".png"), plane[:,:,0])
+                # plt.imsave(os.path.join(class_path, dcm_id + "_" + str(j) + ".png"), plane[:,:,0])
+                print (img_planes[j].shape)
 
     print("Saving images completed")
